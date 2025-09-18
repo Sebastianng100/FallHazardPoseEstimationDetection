@@ -1,0 +1,6 @@
+gradio
+torch
+torchvision
+mediapipe
+ultralytics
+opencv-python
