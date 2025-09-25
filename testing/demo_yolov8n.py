@@ -121,4 +121,4 @@ with gr.Blocks() as demo:
 # 4. Run App
 # -------------------------------
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    demo.launch(share=True)   # gets you a public link

@@ -1,0 +1,20 @@
+# Ignore Python virtual environments
+env/
+venv/
+.venv/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore dataset files
+data
+
+# Ignore gradio
+main/.gradio
