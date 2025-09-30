@@ -1,71 +1,78 @@
+import gradio as gr
+from ultralytics import YOLO
 import torch
 import torch.nn as nn
-from torchvision import models, transforms
+from torchvision import transforms, models
 from PIL import Image
-import gradio as gr
 import os
 
 # ---------- Paths ----------
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))   # project root
-MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "fall_model.pth")
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+FALL_MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "fall_model.pth")
+HAZARD_MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "hazard_yolov83", "weights", "best.pt")
 
-# ---------- Transforms ----------
-transform = transforms.Compose([
+# ---------- Load Models ----------
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ---------- Fall Model Setup ----------
+fall_classes = ["Not Fall", "Fall"]
+
+# Rebuild ResNet18 architecture
+fall_model = models.resnet18(weights=None)
+fall_model.fc = nn.Linear(fall_model.fc.in_features, len(fall_classes))
+
+# Load weights into model
+fall_model.load_state_dict(torch.load(FALL_MODEL_PATH, map_location=device))
+fall_model.to(device)
+fall_model.eval()
+
+fall_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406],
                          [0.229, 0.224, 0.225])
 ])
 
-# ---------- Load Model ----------
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# ---------- Hazard Detection Setup ----------
+hazard_model = YOLO(HAZARD_MODEL_PATH)
 
-model = models.resnet18(weights=None)
-model.fc = nn.Linear(model.fc.in_features, 2)
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-model.to(device)
-model.eval()
-
-# class names
-CLASSES = ["Not Fall", "Fall"]
-
-# Hardcode best validation metrics from your last training
-VAL_METRICS = {
-    "Precision": 0.805,   # from epoch 7-10 unfreeze run
-    "Recall": 0.943,
-    "F1-score": 0.868,
-    "Validation Accuracy": 0.82
-}
-
-# ---------- Inference ----------
+# ---------- Prediction Functions ----------
 def predict_fall(image):
-    if image is None:
-        return "No Image Uploaded", "", ""
-
     img = Image.fromarray(image)
-    img_t = transform(img).unsqueeze(0).to(device)
+    img_t = fall_transform(img).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        outputs = model(img_t)
+        outputs = fall_model(img_t)
         probs = torch.softmax(outputs, dim=1)[0]
         conf, pred = torch.max(probs, 0)
 
-    label = CLASSES[pred.item()]
-    confidence = f"Confidence: {conf.item()*100:.1f}%"
-    
-    metrics_str = "\n".join([f"{k}: {v:.3f}" for k, v in VAL_METRICS.items()])
-    return label, confidence, metrics_str
+    label = fall_classes[pred.item()]
+    return f"{label} (Confidence {conf.item()*100:.1f}%)"
 
+def predict_hazard(image):
+    results = hazard_model.predict(image, conf=0.25)
+    return results[0].plot()  # annotated image with boxes
 
 # ---------- Gradio UI ----------
 with gr.Blocks() as demo:
-    gr.Markdown("## 🧍 Fall Classification (Trained Model)")
+    gr.Markdown("# 🧍 Fall & Hazard Detection")
+
+    mode = gr.Dropdown(choices=["Fall Detection", "Hazard Detection"], 
+                       label="Select Mode", value="Fall Detection")
+
     img = gr.Image(type="numpy", label="Upload Image")
     run = gr.Button("▶ Run Inference", variant="primary")
+
     out_txt = gr.Textbox(label="Prediction", lines=2)
-    out_conf = gr.Textbox(label="Model Confidence", lines=2)
-    out_metrics = gr.Textbox(label="Validation Metrics (from training)", lines=6)
-    run.click(predict_fall, inputs=img, outputs=[out_txt, out_conf, out_metrics])
+    out_img = gr.Image(type="numpy", label="Hazard Detection Output")
+
+    def inference(image, mode):
+        if mode == "Fall Detection":
+            return predict_fall(image), None
+        else:
+            return None, predict_hazard(image)
+
+    run.click(inference, inputs=[img, mode], outputs=[out_txt, out_img])
 
 if __name__ == "__main__":
     demo.launch(share=True)

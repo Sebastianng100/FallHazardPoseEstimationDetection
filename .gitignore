@@ -20,9 +20,11 @@ archive
 scripts/archive
 scripts/classification_data
 demo_dataset
+hazard_dataset
 
 # Ignore gradio
 main/.gradio
 
 # Saved Model
 saved_model
+
