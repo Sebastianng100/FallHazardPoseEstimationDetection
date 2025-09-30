@@ -9,3 +9,6 @@ PYTHON NEEDS TO BE IN 3.11.x else the mediapipe won't work
 *To run codes on docker
 1. docker build -f docker/app.Dockerfile -t fallguard:latest .
 2. docker run -p 7860:7860 fallguard:latest
+
+Downloaded dataset
+1. https://www.kaggle.com/datasets/tuyenldvn/falldataset-imvia

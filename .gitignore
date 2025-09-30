@@ -15,6 +15,14 @@ Thumbs.db
 
 # Ignore dataset files
 data
+fall_dataset
+archive
+scripts/archive
+scripts/classification_data
+demo_dataset
 
 # Ignore gradio
 main/.gradio
+
+# Saved Model
+saved_model
