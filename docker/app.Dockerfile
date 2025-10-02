@@ -1,14 +1,27 @@
+# Use official Python base
 FROM python:3.11-slim
 
-# (optional but handy for video later)
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
-
+# Set working directory inside container
 WORKDIR /app
+
+# Install system deps for Pillow, etc.
+RUN apt-get update && apt-get install -y \
+    git \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (better caching)
 COPY requirements.txt .
+
+# Install Python deps
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src ./src
+# Copy the rest of your app
+COPY . .
 
+# Expose port for Gradio
 EXPOSE 7860
-# -u = unbuffered logs so you can see errors immediately
-ENTRYPOINT ["python","-u","src/app/gradio_app.py"]
+
+# Run your Gradio app
+CMD ["python", "testing.py"]

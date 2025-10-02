@@ -1,6 +1,5 @@
 import argparse
 import os
-import re
 from pathlib import Path
 from typing import List, Tuple
 
@@ -14,95 +13,102 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 import numpy as np
 import random
 
-
-# ------------- Paths (relative to main/) -------------
-# main/classification.py  ->  project root  ->  fall_dataset/images/{train,val}
+# -----------------------------
+# Paths
+# -----------------------------
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-IMAGES_ROOT = PROJECT_ROOT / "fall_dataset" / "images"   # contains train/ and val/
-MODEL_PATH = PROJECT_ROOT / "saved_model" / "fall_model.pth"
+IMAGES_ROOT = PROJECT_ROOT / "processed_dataset" / "images"
+LABELS_ROOT = PROJECT_ROOT / "processed_dataset" / "labels"
+MODEL_PATH = PROJECT_ROOT / "saved_model" / "efficientnet_baseline_fall_model.pth"
 
-
-# ------------- Reproducibility -------------
+# -----------------------------
+# Utilities
+# -----------------------------
 def set_seed(seed: int = 42):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-
-# ------------- Label from filename -------------
-def label_from_name(path: Path) -> int:
+# -----------------------------
+# Dataset
+# -----------------------------
+class LabelFileDataset(Dataset):
     """
-    Return 1 for FALL, 0 for NOT-FALL based on filename.
-    Handles names like 'fall123.jpg' vs 'not fallen001.jpg'.
+    Dataset that reads images and labels from YOLO-style dataset.
+    Simplifies for classification: 0 = fall, 1 = not fall.
     """
-    name = path.stem.lower()
-    # normalize separators
-    norm = re.sub(r"[\W_]+", " ", name).strip()
-
-    # check NOT-fall patterns first to avoid 'fall' substring catching 'not fallen'
-    not_fall_patterns = [
-        "not fall", "notfall", "not fallen", "notfallen", "no fall", "nofall",
-        "standing", "walk", "walking", "sit", "sitting", "upright"
-    ]
-    if any(p in norm for p in not_fall_patterns):
-        return 0
-
-    # fall patterns
-    if "fall" in norm or norm.startswith("fallen"):
-        return 1
-
-    # default to NOT-FALL if unclear
-    return 0
-
-
-# ------------- Custom Dataset -------------
-class NameLabelDataset(Dataset):
-    def __init__(self, directory: Path, transform=None):
-        self.directory = Path(directory)
+    def __init__(self, images_dir: Path, labels_dir: Path, transform=None):
+        self.images_dir = Path(images_dir)
+        self.labels_dir = Path(labels_dir)
         self.transform = transform
-        self.paths = self._gather_images(self.directory)
+
+        # Collect image paths
+        exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
+        self.paths = [p for p in self.images_dir.iterdir() if p.suffix.lower() in exts]
 
         if len(self.paths) == 0:
-            raise RuntimeError(f"No images found in: {self.directory}")
+            raise RuntimeError(f"No images found in: {self.images_dir}")
 
-        # quick stats
-        ys = [label_from_name(p) for p in self.paths]
+        # Count labels
+        ys = [self._read_label(p) for p in self.paths]
         self.class_counts = {0: ys.count(0), 1: ys.count(1)}
 
-    @staticmethod
-    def _gather_images(d: Path) -> List[Path]:
-        exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
-        paths = [p for p in d.iterdir() if p.suffix.lower() in exts]
-        # also include nested files if any
-        for sub in [x for x in d.iterdir() if x.is_dir()]:
-            paths.extend([p for p in sub.rglob("*") if p.suffix.lower() in exts])
-        return sorted(paths)
+    def _read_label(self, img_path: Path) -> int:
+        """
+        Read label from YOLO .txt file corresponding to image.
+        Uses the first class ID if multiple are present.
+        """
+        lbl_file = self.labels_dir / (img_path.stem + ".txt")
+        if not lbl_file.exists():
+            raise FileNotFoundError(f"Label file not found for {img_path.name}")
+
+        with open(lbl_file, "r") as f:
+            line = f.readline().strip()
+            if not line:
+                return 1  # assume 'not fall' if empty
+            parts = line.split()
+            return int(parts[0])  # 0 = fall, 1 = not fall
 
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, idx):
         p = self.paths[idx]
-        y = label_from_name(p)
+        y = self._read_label(p)
         img = Image.open(p).convert("RGB")
         if self.transform:
             img = self.transform(img)
         return img, y
 
+# -----------------------------
+# Model Builder
+# -----------------------------
+def build_model(model_name="efficientnet_b0", num_classes: int = 2, freeze_backbone: bool = True):
+    if model_name == "efficientnet_b0":
+        model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
+        in_features = model.classifier[1].in_features
+        model.classifier[1] = nn.Linear(in_features, num_classes)
 
-# ------------- Model / Train / Eval -------------
-def build_model(num_classes: int = 2, freeze_backbone: bool = True):
-    model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+    elif model_name == "efficientnet_b3":
+        model = models.efficientnet_b3(weights=models.EfficientNet_B3_Weights.IMAGENET1K_V1)
+        in_features = model.classifier[1].in_features
+        model.classifier[1] = nn.Linear(in_features, num_classes)
+
+    else:
+        raise ValueError(f"Unsupported model: {model_name}")
+
     if freeze_backbone:
         for p in model.parameters():
             p.requires_grad = False
-    # always train the final layer
-    in_features = model.fc.in_features
-    model.fc = nn.Linear(in_features, num_classes)
+        for p in model.classifier.parameters():
+            p.requires_grad = True
+
     return model
 
-
+# -----------------------------
+# Transforms
+# -----------------------------
 def get_transforms():
     return transforms.Compose([
         transforms.Resize((224, 224)),
@@ -113,12 +119,10 @@ def get_transforms():
         ),
     ])
 
-
-def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[float, float, float, float, np.ndarray]:
-    """
-    If optimizer is None => evaluation mode.
-    Returns: (loss, acc, precision, recall, f1, confusion_matrix)
-    """
+# -----------------------------
+# Training / Eval Loop
+# -----------------------------
+def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[float, float, float, float, float, np.ndarray]:
     is_train = optimizer is not None
     model.train(is_train)
 
@@ -150,41 +154,40 @@ def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[f
     cm = confusion_matrix(all_labels, all_preds, labels=[0, 1])
     return avg_loss, acc, prec, rec, f1, cm
 
-
+# -----------------------------
+# Main
+# -----------------------------
 def main(args):
     set_seed(args.seed)
 
-    # Paths
-    train_dir = IMAGES_ROOT / "train"
-    val_dir = IMAGES_ROOT / "val"
+    train_img_dir = IMAGES_ROOT / "train"
+    val_img_dir = IMAGES_ROOT / "val"
+    train_lbl_dir = LABELS_ROOT / "train"
+    val_lbl_dir = LABELS_ROOT / "val"
 
-    # Data
     tfms = get_transforms()
-    train_ds = NameLabelDataset(train_dir, transform=tfms)
-    val_ds = NameLabelDataset(val_dir, transform=tfms)
+    train_ds = LabelFileDataset(train_img_dir, train_lbl_dir, transform=tfms)
+    val_ds = LabelFileDataset(val_img_dir, val_lbl_dir, transform=tfms)
 
-    # DataLoaders
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
-    # Class weights to handle imbalance
     total_train = len(train_ds)
     w0 = total_train / (2.0 * max(train_ds.class_counts.get(0, 1), 1))
     w1 = total_train / (2.0 * max(train_ds.class_counts.get(1, 1), 1))
     class_weights = torch.tensor([w0, w1], dtype=torch.float32)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = build_model(num_classes=2, freeze_backbone=not args.unfreeze_backbone).to(device)
+    model = build_model(args.model, num_classes=2, freeze_backbone=not args.unfreeze_backbone).to(device)
     criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
 
     print(f"Project root: {PROJECT_ROOT}")
-    print(f"Train dir:    {train_dir} (count={len(train_ds)} | class_counts={train_ds.class_counts})")
-    print(f"Val dir:      {val_dir}   (count={len(val_ds)} | class_counts={val_ds.class_counts})")
+    print(f"Train dir:    {train_img_dir} (count={len(train_ds)} | class_counts={train_ds.class_counts})")
+    print(f"Val dir:      {val_img_dir}   (count={len(val_ds)} | class_counts={val_ds.class_counts})")
     print(f"Saving model to: {MODEL_PATH}")
     print(f"Device: {device}\n")
 
-    # Training
     best_val_f1 = -1.0
     for epoch in range(1, args.epochs + 1):
         tr_loss, tr_acc, tr_p, tr_r, tr_f1, tr_cm = epoch_loop(model, train_loader, device, optimizer, criterion)
@@ -193,17 +196,19 @@ def main(args):
         print(f"Epoch {epoch:02d}/{args.epochs} "
               f"| Train L {tr_loss:.4f} A {tr_acc:.3f} P {tr_p:.3f} R {tr_r:.3f} F1 {tr_f1:.3f} "
               f"| Val L {va_loss:.4f} A {va_acc:.3f} P {va_p:.3f} R {va_r:.3f} F1 {va_f1:.3f}")
-        print(f"  Train CM (rows true [0,1], cols pred [0,1]):\n{tr_cm}")
-        print(f"  Val   CM (rows true [0,1], cols pred [0,1]):\n{va_cm}\n")
+        print(f"  Train CM:\n{tr_cm}")
+        print(f"  Val   CM:\n{va_cm}\n")
 
         if va_f1 > best_val_f1:
             best_val_f1 = va_f1
             torch.save(model.state_dict(), MODEL_PATH)
-            print(f"✅ Saved best model (val F1={best_val_f1:.3f}) → {MODEL_PATH}\n")
+            print(f"Saved best model")
 
     print("Done.")
 
-
+# -----------------------------
+# CLI
+# -----------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=10)
@@ -211,6 +216,9 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--unfreeze-backbone", action="store_true",
-                        help="Fine-tune the whole ResNet18 instead of just the final layer.")
+                        help="Fine-tune the whole EfficientNet instead of just the classifier.")
+    parser.add_argument("--model", type=str, default="efficientnet_b0",
+                        choices=["efficientnet_b0", "efficientnet_b3"],
+                        help="Which EfficientNet variant to use")
     args = parser.parse_args()
     main(args)

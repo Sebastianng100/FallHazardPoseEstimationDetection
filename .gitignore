@@ -6,8 +6,9 @@ venv/
 # Ignore Python cache
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
+*.log
+*.ipynb_checkpoints
+.git
 
 # Ignore system files
 .DS_Store
@@ -15,16 +16,20 @@ Thumbs.db
 
 # Ignore dataset files
 data
-fall_dataset
-archive
-scripts/archive
-scripts/classification_data
+annotated_fall_dataset
+annotation
+data
 demo_dataset
 hazard_dataset
+kaggle_fall_dataset
+processed_dataset
 
 # Ignore gradio
 main/.gradio
+main/__pycache__
 
 # Saved Model
 saved_model
 
+# Files and Folders to ignore
+scripts
