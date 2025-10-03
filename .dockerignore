@@ -1,0 +1,42 @@
+# Python environments
+env/
+venv/
+.venv/
+
+# Python cache and logs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Jupyter notebooks
+*.ipynb
+*.ipynb_checkpoints/
+
+# Git
+.git
+.gitignore
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+
+# Datasets (not needed inside container)
+__pycache__/
+.git
+*.ipynb
+datasets/
+kaggle_fall_dataset/
+processed_dataset/
+annotated_fall_dataset/
+demo_dataset/
+hazard_dataset/
+training_results/
+
+# Gradio cache
+.gradio/
+__pycache__/
+
+# Training scripts (if you want inference-only image)
+scripts/

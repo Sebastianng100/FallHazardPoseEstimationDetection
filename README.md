@@ -7,8 +7,11 @@ PYTHON NEEDS TO BE IN 3.11.x else the mediapipe won't work
 .venv\Scripts\activate
 
 To run codes on docker
-1. docker build -f docker/app.Dockerfile -t fallguard:latest .
-2. docker run -p 7860:7860 fallguard:latest
+
+# Build image
+docker build -t fall-detection-app .
+# Run container
+docker run -it --rm -p 7860:7860 fall-detection-app
 
 <b>Docker depolyment</b>
 project_root/
@@ -22,7 +25,22 @@ project_root/
 ├── testing.py           # Gradio app (frontend)
 ├── requirements.txt     # your dependencies
 
-Downloaded dataset
+<b>Hugging face</b>
+git lfs install
+
+# Clone your empty Space
+git clone https://huggingface.co/spaces/sngofficial100/fall-detection-demo
+cd fall-detection-demo
+
+# Copy your project files into this folder
+cp -r ../your-local-project/* .
+
+# Commit & push
+git add .
+git commit -m "Initial Docker deployment"
+git push
+
+<b>Downloaded dataset</b>
 kaggle_fall_dataset
 1. https://www.kaggle.com/datasets/uttejkumarkandagatla/fall-detection-dataset
 kaggle_le2i dataset

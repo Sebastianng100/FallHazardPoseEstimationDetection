@@ -16,13 +16,14 @@ Thumbs.db
 
 # Ignore dataset files
 data
-annotated_fall_dataset
 annotation
-data
-demo_dataset
-hazard_dataset
-kaggle_fall_dataset
-processed_dataset
+datasets/
+kaggle_fall_dataset/
+processed_dataset/
+annotated_fall_dataset/
+demo_dataset/
+hazard_dataset/
+training_results/
 
 # Ignore gradio
 main/.gradio
@@ -33,3 +34,5 @@ saved_model
 
 # Files and Folders to ignore
 scripts
+*.ipynb
+
