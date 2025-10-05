@@ -80,3 +80,50 @@ cloud hosting was horror as lfs was tiring to get pass
 | EfficientNet Baseline    | EfficientNet-B0 | Frozen     | Cross-Entropy               | Evaluate performance of a lightweight CNN.                      |
 | ResNet (Optimised)       | ResNet-18       | Fine-tuned | Focal Loss, OneCycleLR      | Improve accuracy and handle class imbalance.                    |
 | EfficientNet (Optimised) | EfficientNet-B0 | Fine-tuned | Label Smoothing, Mixup, SWA | Enhance generalisation and stability.                           |
+
+All models classify between two classes:
+0 = Fall, 1 = Not Fall.
+
+# Baseline vs Non-Baseline Models
+
+<b>Baseline Models</b>
+
+Baseline models were trained with frozen backbones and a single linear classifier layer. Only the final fully connected layer was updated, keeping ImageNet features fixed.
+These models provide a reference for evaluating the effect of fine-tuning and regularisation.
+
+<b>Non-Baseline Models</b>
+The optimised models unfreeze the backbone for fine-tuning and apply advanced training strategies:
+* <b>ResNet</b>: uses Focal Loss and OneCycleLR to focus learning on hard samples and improve convergence.
+
+* <b>EfficientNet</b>: employs Label Smoothing, Mixup augmentation, and Stochastic Weight Averaging (SWA) for stability and calibration.
+
+# Training Configuration
+
+| Parameter         | Baseline Models | Non-Baseline Models                  |
+| ----------------- | --------------- | ------------------------------------ |
+| Epochs            | 10              | 15–20                                |
+| Batch Size        | 16              | 16                                   |
+| Optimizer         | Adam            | AdamW (ResNet) / Adam (EfficientNet) |
+| Learning Rate     | 1e-4            | 1e-4 (with scheduler)                |
+| Loss Function     | Cross-Entropy   | Focal Loss / Label Smoothing         |
+| Scheduler         | None            | OneCycleLR / CosineAnnealingLR       |
+| Backbone          | Frozen          | Fine-tuned                           |
+| Augmentation      | None            | Mixup, Dropout, Label Smoothing      |
+| Evaluation Metric | F1-Score        | F1-Score                             |
+
+# Evaluation Results
+
+| Model                    | Best Epoch | Best Validation F1 | Validation Accuracy | Observations                                                      |
+| ------------------------ | ---------- | ------------------ | ------------------- | ----------------------------------------------------------------- |
+| ResNet Baseline          | 8          | 0.75               | 0.82                | Stable but limited by frozen backbone.                            |
+| EfficientNet Baseline    | 9          | 0.65               | 0.78                | Underfitting due to limited training.                             |
+| ResNet (Optimised)       | 11         | **0.87**           | **0.89**            | Best performing model; well-balanced precision and recall.        |
+| EfficientNet (Optimised) | 19         | 0.67               | 0.81                | Stable but slower convergence; mixup reduces short-term accuracy. |
+
+# Key Findings
+
+* Fine-tuning the backbone significantly improves performance compared to frozen baselines.
+* Focal Loss effectively mitigates class imbalance in fall detection data.
+* OneCycleLR accelerates convergence and avoids overfitting.
+* Label Smoothing and SWA improve calibration but require longer training.
+* ResNet (Optimised) achieved the best trade-off between accuracy, F1-score, and generalisation.
