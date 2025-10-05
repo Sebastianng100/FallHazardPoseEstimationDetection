@@ -30,9 +30,6 @@ training_metrics_*
 main/.gradio
 main/__pycache__
 
-# Saved Model
-saved_model
-
 # Files and Folders to ignore
 scripts
 *.ipynb
