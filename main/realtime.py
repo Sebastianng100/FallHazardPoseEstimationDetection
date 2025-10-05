@@ -7,11 +7,11 @@ from PIL import Image
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = models.resnet18(weights=None)
 model.fc = nn.Linear(model.fc.in_features, 2)
-model.load_state_dict(torch.load("saved_model/fall_model.pth", map_location=device))
+model.load_state_dict(torch.load("../saved_model/resnet_fall_model.pth", map_location=device))
 model.to(device)
 model.eval()
 
-CLASSES = ["Not Fall", "Fall"]
+CLASSES = ["Fall", "Not Fall"]
 
 transform = transforms.Compose([
     transforms.Resize((224,224)),
@@ -19,7 +19,7 @@ transform = transforms.Compose([
     transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])
 ])
 
-cap = cv2.VideoCapture(0)   # 0 = default webcam
+cap = cv2.VideoCapture(0)
 
 print("Press 'q' to quit.")
 

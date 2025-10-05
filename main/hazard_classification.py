@@ -13,7 +13,7 @@ def train_hazard_model():
         epochs=30,
         imgsz=640,
         batch=16,
-        workers=0,  # set 0 on Windows
+        workers=0,
         project=SAVE_DIR,
         name="hazard_yolov8"
     )'''

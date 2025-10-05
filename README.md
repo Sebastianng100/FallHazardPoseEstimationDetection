@@ -63,3 +63,20 @@ Questions for myself
 2. modify layers
 3. do cloud deploy
 4. do annotation if have time
+
+
+Struggles i faces
+I forgot that my 0 is fall and 1 is not fall and i accidentally trained it opposite and was so frustrated as to why my results are so bad but actually it is just my fault for being clumsy
+
+solo is too hard i need to do everything alone no help from anyone
+
+cloud hosting was horror as lfs was tiring to get pass
+
+# Model Overview
+
+| Model                    | Architecture    | Backbone   | Optimisation                | Purpose                                                         |
+| ------------------------ | --------------- | ---------- | --------------------------- | --------------------------------------------------------------- |
+| ResNet Baseline          | ResNet-18       | Frozen     | Cross-Entropy               | Establish baseline accuracy using pre-trained ImageNet weights. |
+| EfficientNet Baseline    | EfficientNet-B0 | Frozen     | Cross-Entropy               | Evaluate performance of a lightweight CNN.                      |
+| ResNet (Optimised)       | ResNet-18       | Fine-tuned | Focal Loss, OneCycleLR      | Improve accuracy and handle class imbalance.                    |
+| EfficientNet (Optimised) | EfficientNet-B0 | Fine-tuned | Label Smoothing, Mixup, SWA | Enhance generalisation and stability.                           |

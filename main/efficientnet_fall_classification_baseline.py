@@ -2,7 +2,6 @@ import argparse
 import os
 from pathlib import Path
 from typing import List, Tuple
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,26 +12,17 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 import numpy as np
 import random
 
-# -----------------------------
-# Paths
-# -----------------------------
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 IMAGES_ROOT = PROJECT_ROOT / "processed_dataset" / "images"
 LABELS_ROOT = PROJECT_ROOT / "processed_dataset" / "labels"
 MODEL_PATH = PROJECT_ROOT / "saved_model" / "efficientnet_baseline_fall_model.pth"
 
-# -----------------------------
-# Utilities
-# -----------------------------
 def set_seed(seed: int = 42):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-# -----------------------------
-# Dataset
-# -----------------------------
 class LabelFileDataset(Dataset):
     """
     Dataset that reads images and labels from YOLO-style dataset.
@@ -43,14 +33,12 @@ class LabelFileDataset(Dataset):
         self.labels_dir = Path(labels_dir)
         self.transform = transform
 
-        # Collect image paths
         exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
         self.paths = [p for p in self.images_dir.iterdir() if p.suffix.lower() in exts]
 
         if len(self.paths) == 0:
             raise RuntimeError(f"No images found in: {self.images_dir}")
 
-        # Count labels
         ys = [self._read_label(p) for p in self.paths]
         self.class_counts = {0: ys.count(0), 1: ys.count(1)}
 
@@ -66,9 +54,9 @@ class LabelFileDataset(Dataset):
         with open(lbl_file, "r") as f:
             line = f.readline().strip()
             if not line:
-                return 1  # assume 'not fall' if empty
+                return 1
             parts = line.split()
-            return int(parts[0])  # 0 = fall, 1 = not fall
+            return int(parts[0])
 
     def __len__(self):
         return len(self.paths)
@@ -81,9 +69,6 @@ class LabelFileDataset(Dataset):
             img = self.transform(img)
         return img, y
 
-# -----------------------------
-# Model Builder
-# -----------------------------
 def build_model(model_name="efficientnet_b0", num_classes: int = 2, freeze_backbone: bool = True):
     if model_name == "efficientnet_b0":
         model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
@@ -106,9 +91,6 @@ def build_model(model_name="efficientnet_b0", num_classes: int = 2, freeze_backb
 
     return model
 
-# -----------------------------
-# Transforms
-# -----------------------------
 def get_transforms():
     return transforms.Compose([
         transforms.Resize((224, 224)),
@@ -119,9 +101,6 @@ def get_transforms():
         ),
     ])
 
-# -----------------------------
-# Training / Eval Loop
-# -----------------------------
 def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[float, float, float, float, float, np.ndarray]:
     is_train = optimizer is not None
     model.train(is_train)
@@ -154,9 +133,6 @@ def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[f
     cm = confusion_matrix(all_labels, all_preds, labels=[0, 1])
     return avg_loss, acc, prec, rec, f1, cm
 
-# -----------------------------
-# Main
-# -----------------------------
 def main(args):
     set_seed(args.seed)
 
@@ -206,9 +182,6 @@ def main(args):
 
     print("Done.")
 
-# -----------------------------
-# CLI
-# -----------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=10)

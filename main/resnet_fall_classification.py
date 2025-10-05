@@ -1,7 +1,6 @@
 import argparse
 from pathlib import Path
 from typing import Tuple
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,18 +11,14 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 import numpy as np
 import random
 import torch.nn.functional as F
+import csv
 
-# -----------------------------
-# Paths
-# -----------------------------
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 IMAGES_ROOT = PROJECT_ROOT / "processed_dataset" / "images"
 LABELS_ROOT = PROJECT_ROOT / "processed_dataset" / "labels"
 MODEL_PATH = PROJECT_ROOT / "saved_model" / "resnet_fall_model.pth"
+METRICS_FILE = PROJECT_ROOT / "training_metrics_resnet.csv"
 
-# -----------------------------
-# Focal Loss
-# -----------------------------
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, reduction="mean"):
         super(FocalLoss, self).__init__()
@@ -41,23 +36,14 @@ class FocalLoss(nn.Module):
             return focal_loss.sum()
         return focal_loss
 
-# -----------------------------
-# Utilities
-# -----------------------------
 def set_seed(seed: int = 42):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-# -----------------------------
-# Dataset (label-file based)
-# -----------------------------
 class LabelFileDataset(Dataset):
-    """
-    Dataset that reads images and labels from YOLO-style dataset.
-    Simplified for classification: 0 = fall, 1 = not fall.
-    """
+    """YOLO-style dataset simplified for classification (0 = fall, 1 = not fall)."""
     def __init__(self, images_dir: Path, labels_dir: Path, transform=None):
         self.images_dir = Path(images_dir)
         self.labels_dir = Path(labels_dir)
@@ -65,7 +51,6 @@ class LabelFileDataset(Dataset):
 
         exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
         self.paths = [p for p in self.images_dir.iterdir() if p.suffix.lower() in exts]
-
         if len(self.paths) == 0:
             raise RuntimeError(f"No images found in: {self.images_dir}")
 
@@ -79,9 +64,9 @@ class LabelFileDataset(Dataset):
         with open(lbl_file, "r") as f:
             line = f.readline().strip()
             if not line:
-                return 1  # default to 'not fall'
+                return 1
             parts = line.split()
-            return int(parts[0])  # 0 = fall, 1 = not fall
+            return int(parts[0])
 
     def __len__(self):
         return len(self.paths)
@@ -94,9 +79,6 @@ class LabelFileDataset(Dataset):
             img = self.transform(img)
         return img, y
 
-# -----------------------------
-# Model
-# -----------------------------
 def build_model(num_classes: int = 2, freeze_backbone: bool = True):
     model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
     if freeze_backbone:
@@ -109,9 +91,6 @@ def build_model(num_classes: int = 2, freeze_backbone: bool = True):
     )
     return model
 
-# -----------------------------
-# Transforms
-# -----------------------------
 def get_transforms():
     return transforms.Compose([
         transforms.Resize((224, 224)),
@@ -122,9 +101,6 @@ def get_transforms():
         ),
     ])
 
-# -----------------------------
-# Training / Evaluation
-# -----------------------------
 def epoch_loop(model, loader, device, optimizer=None, criterion=None, scheduler=None) -> Tuple[float, float, float, float, float, np.ndarray]:
     is_train = optimizer is not None
     model.train(is_train)
@@ -159,9 +135,6 @@ def epoch_loop(model, loader, device, optimizer=None, criterion=None, scheduler=
     cm = confusion_matrix(all_labels, all_preds, labels=[0, 1])
     return avg_loss, acc, prec, rec, f1, cm
 
-# -----------------------------
-# Main
-# -----------------------------
 def main(args):
     set_seed(args.seed)
 
@@ -179,13 +152,9 @@ def main(args):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = build_model(num_classes=2, freeze_backbone=not args.unfreeze_backbone).to(device)
-
     criterion = FocalLoss(alpha=1, gamma=2)
-
     optimizer = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.OneCycleLR(
-        optimizer, max_lr=args.lr, steps_per_epoch=len(train_loader), epochs=args.epochs
-    )
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=args.lr, steps_per_epoch=len(train_loader), epochs=args.epochs)
 
     print(f"Project root: {PROJECT_ROOT}")
     print(f"Train dir:    {train_img_dir} (count={len(train_ds)} | class_counts={train_ds.class_counts})")
@@ -193,27 +162,32 @@ def main(args):
     print(f"Saving model to: {MODEL_PATH}")
     print(f"Device: {device}\n")
 
+    with open(METRICS_FILE, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["epoch", "train_loss", "train_acc", "train_f1", "val_loss", "val_acc", "val_f1"])
+
     best_val_f1 = -1.0
     for epoch in range(1, args.epochs + 1):
         tr_loss, tr_acc, tr_p, tr_r, tr_f1, tr_cm = epoch_loop(model, train_loader, device, optimizer, criterion, scheduler)
         va_loss, va_acc, va_p, va_r, va_f1, va_cm = epoch_loop(model, val_loader, device, None, criterion)
 
         print(f"Epoch {epoch:02d}/{args.epochs} "
-              f"| Train L {tr_loss:.4f} A {tr_acc:.3f} P {tr_p:.3f} R {tr_r:.3f} F1 {tr_f1:.3f} "
-              f"| Val L {va_loss:.4f} A {va_acc:.3f} P {va_p:.3f} R {va_r:.3f} F1 {va_f1:.3f}")
+              f"| Train L {tr_loss:.4f} A {tr_acc:.3f} F1 {tr_f1:.3f} "
+              f"| Val L {va_loss:.4f} A {va_acc:.3f} F1 {va_f1:.3f}")
         print(f"  Train CM:\n{tr_cm}")
         print(f"  Val   CM:\n{va_cm}\n")
+
+        with open(METRICS_FILE, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([epoch, tr_loss, tr_acc, tr_f1, va_loss, va_acc, va_f1])
 
         if va_f1 > best_val_f1:
             best_val_f1 = va_f1
             torch.save(model.state_dict(), MODEL_PATH)
             print(f"Saved best model (val F1={best_val_f1:.3f}) → {MODEL_PATH}\n")
 
-    print("Done.")
+    print(f"Done. Metrics saved to {METRICS_FILE}")
 
-# -----------------------------
-# CLI
-# -----------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=10)

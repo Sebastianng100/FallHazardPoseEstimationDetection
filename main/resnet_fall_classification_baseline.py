@@ -12,26 +12,17 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 import numpy as np
 import random
 
-# -----------------------------
-# Paths
-# -----------------------------
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 IMAGES_ROOT = PROJECT_ROOT / "processed_dataset" / "images"
 LABELS_ROOT = PROJECT_ROOT / "processed_dataset" / "labels"
 MODEL_PATH = PROJECT_ROOT / "saved_model" / "resnet_baseline_fall_model.pth"
 
-# -----------------------------
-# Utilities
-# -----------------------------
 def set_seed(seed: int = 42):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-# -----------------------------
-# Dataset (label-file based)
-# -----------------------------
 class LabelFileDataset(Dataset):
     """
     Dataset that reads images and labels from YOLO-style dataset.
@@ -58,9 +49,9 @@ class LabelFileDataset(Dataset):
         with open(lbl_file, "r") as f:
             line = f.readline().strip()
             if not line:
-                return 1  # default to 'not fall'
+                return 1
             parts = line.split()
-            return int(parts[0])  # 0 = fall, 1 = not fall
+            return int(parts[0])
 
     def __len__(self):
         return len(self.paths)
@@ -73,9 +64,6 @@ class LabelFileDataset(Dataset):
             img = self.transform(img)
         return img, y
 
-# -----------------------------
-# Model
-# -----------------------------
 def build_model(num_classes: int = 2, freeze_backbone: bool = True):
     model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
     if freeze_backbone:
@@ -85,9 +73,6 @@ def build_model(num_classes: int = 2, freeze_backbone: bool = True):
     model.fc = nn.Linear(in_features, num_classes)
     return model
 
-# -----------------------------
-# Transforms
-# -----------------------------
 def get_transforms():
     return transforms.Compose([
         transforms.Resize((224, 224)),
@@ -98,9 +83,6 @@ def get_transforms():
         ),
     ])
 
-# -----------------------------
-# Training / Evaluation
-# -----------------------------
 def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[float, float, float, float, float, np.ndarray]:
     is_train = optimizer is not None
     model.train(is_train)
@@ -133,9 +115,6 @@ def epoch_loop(model, loader, device, optimizer=None, criterion=None) -> Tuple[f
     cm = confusion_matrix(all_labels, all_preds, labels=[0, 1])
     return avg_loss, acc, prec, rec, f1, cm
 
-# -----------------------------
-# Main
-# -----------------------------
 def main(args):
     set_seed(args.seed)
 
@@ -185,9 +164,6 @@ def main(args):
 
     print("Done.")
 
-# -----------------------------
-# CLI
-# -----------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=10)
