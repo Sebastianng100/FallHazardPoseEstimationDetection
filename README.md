@@ -9,6 +9,7 @@ PYTHON NEEDS TO BE IN 3.11.x else the mediapipe won't work
 To run codes on docker
 
 # Build image
+go into parent folder first
 docker build -t fall-detection-app .
 # Run container
 docker run -it --rm -p 7860:7860 fall-detection-app
@@ -101,10 +102,10 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 
 | Parameter         | Baseline Models | Non-Baseline Models                  |
 | ----------------- | --------------- | ------------------------------------ |
-| Epochs            | 10              | 15–20                                |
+| Epochs            | 10              | 20                                |
 | Batch Size        | 16              | 16                                   |
 | Optimizer         | Adam            | AdamW (ResNet) / Adam (EfficientNet) |
-| Learning Rate     | 1e-4            | 1e-4 (with scheduler)                |
+| Learning Rate     | 1e-4            | 1e-5 (with scheduler)                |
 | Loss Function     | Cross-Entropy   | Focal Loss / Label Smoothing         |
 | Scheduler         | None            | OneCycleLR / CosineAnnealingLR       |
 | Backbone          | Frozen          | Fine-tuned                           |
@@ -127,3 +128,8 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 * OneCycleLR accelerates convergence and avoids overfitting.
 * Label Smoothing and SWA improve calibration but require longer training.
 * ResNet (Optimised) achieved the best trade-off between accuracy, F1-score, and generalisation.
+
+Running locally:
+run env
+go to main folder
+python main.py

@@ -94,7 +94,7 @@ with gr.Blocks() as demo:
             "EfficientNet Fall Detection",
             "ResNet Baseline Fall Detection",
             "EfficientNet Baseline Fall Detection",
-            #"Hazard Detection"
+            "Hazard Detection"
         ],
         label="Select Mode", 
         value="ResNet Fall Detection"

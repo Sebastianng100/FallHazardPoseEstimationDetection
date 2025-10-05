@@ -14,7 +14,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Ignore dataset files
+# Ignore dataset and analysis files
 data
 annotation
 datasets/
@@ -24,6 +24,7 @@ annotated_fall_dataset/
 demo_dataset/
 hazard_dataset/
 training_results/
+training_metrics_*
 
 # Ignore gradio
 main/.gradio

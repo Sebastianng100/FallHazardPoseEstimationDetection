@@ -3,11 +3,17 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
+import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = models.resnet18(weights=None)
-model.fc = nn.Linear(model.fc.in_features, 2)
-model.load_state_dict(torch.load("../saved_model/resnet_fall_model.pth", map_location=device))
+#model.fc = nn.Linear(model.fc.in_features, 2)
+model.fc = nn.Sequential(
+    nn.Dropout(0.5),
+    nn.Linear(model.fc.in_features, 2)
+)
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "saved_model", "resnet_fall_model.pth")
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
 
