@@ -135,7 +135,7 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 
 | **Configuration Component**           | **Rationale / Purpose**                                                                                                         |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **  Optimised ResNet Configuration** | **Goal:** Fine-tune all layers to learn posture-specific and domain-specific features for fall detection.                       |
+|   **Optimised ResNet Configuration** | **Goal:** Fine-tune all layers to learn posture-specific and domain-specific features for fall detection.                       |
 | Backbone                              | Unfrozen. Allows convolutional filters to relearn human postures, orientations, and environmental cues specific to fall images. |
 | Loss Function – `Focal Loss`          | Focuses learning on hard or minority samples (*Fall*), reducing class imbalance bias.                                           |
 | Scheduler – `OneCycleLR`              | Dynamically adjusts learning rate (increase then decrease) for faster, smoother convergence. Prevents early stagnation.         |
