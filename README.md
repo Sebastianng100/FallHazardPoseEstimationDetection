@@ -144,6 +144,16 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 | Epochs – `20`                         | Provides sufficient updates for full-network fine-tuning and stability.                                                         |
 | **Outcome:**                          | Achieved significant improvement in F1 (~0.87). Learns fall-specific posture and ground contact patterns.                       |
 
+| **Configuration Component**                        | **Rationale / Purpose**                                                                                              |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+|   **Optimised EfficientNet Configuration**        | **Goal:** Enhance generalisation and stability through smoother training and better regularisation.                  |
+| Backbone                                           | Unfrozen for complete fine-tuning; adapts complex EfficientNet features to fall imagery.                             |
+| Loss Function – `Label Smoothing`                  | Prevents overconfidence by slightly softening label targets, improving calibration.                                  |
+| Data Augmentation – `Mixup`                        | Blends two images and labels to create synthetic variations, improving generalisation and robustness.                |
+| Optimisation – `SWA (Stochastic Weight Averaging)` | Averages model weights across epochs for smoother final performance and reduced variance.                            |
+| Scheduler – `CosineAnnealingLR`                    | Gradually lowers learning rate following a cosine curve, improving long-term convergence.                            |
+| Learning Rate – `1e-5`, Epochs – `20`              | Matches fine-tuning pace of ResNet while maintaining stability for complex layers.                                   |
+| **Outcome:**                                       | Stable training, reduced overfitting, better calibration, and improved generalisation under limited data conditions. |
 
 # Evaluation Results
 
