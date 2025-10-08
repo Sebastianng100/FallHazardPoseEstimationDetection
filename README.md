@@ -123,7 +123,7 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 
 | **Configuration Component**        | **Rationale / Purpose**                                                                                                                                 |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **📘 Baseline Configuration**      | **Goal:** Establish a simple, stable benchmark using pretrained ImageNet features.                                                                      |
+| **  Baseline Configuration**      | **Goal:** Establish a simple, stable benchmark using pretrained ImageNet features.                                                                      |
 | Model Backbone                     | Frozen. Reuses ImageNet filters (edges, shapes, textures) without further training. Prevents overfitting and provides a reliable reference performance. |
 | Classifier Layer                   | Replaced final FC layer (1000→2) to match binary classes: *Fall* and *Not Fall.*                                                                        |
 | Loss Function – `CrossEntropyLoss` | Standard classification loss measuring the difference between predicted and true classes. Easy to interpret and suitable for balanced datasets.         |
@@ -135,7 +135,7 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 
 | **Configuration Component**           | **Rationale / Purpose**                                                                                                         |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **🔶 Optimised ResNet Configuration** | **Goal:** Fine-tune all layers to learn posture-specific and domain-specific features for fall detection.                       |
+| **  Optimised ResNet Configuration** | **Goal:** Fine-tune all layers to learn posture-specific and domain-specific features for fall detection.                       |
 | Backbone                              | Unfrozen. Allows convolutional filters to relearn human postures, orientations, and environmental cues specific to fall images. |
 | Loss Function – `Focal Loss`          | Focuses learning on hard or minority samples (*Fall*), reducing class imbalance bias.                                           |
 | Scheduler – `OneCycleLR`              | Dynamically adjusts learning rate (increase then decrease) for faster, smoother convergence. Prevents early stagnation.         |
