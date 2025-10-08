@@ -85,6 +85,13 @@ cloud hosting was horror as lfs was tiring to get pass
 All models classify between two classes:
 0 = Fall, 1 = Not Fall.
 
+# Model Modifications
+| Model               | Original Output              | Modified Output       | Added                                |
+| ------------------- | ---------------------------- | --------------------- | ------------------------------------ |
+| **ResNet-18**       | 1000-class Linear(512→1000)  | Binary Linear(512→2)  | Dropout(0.5)                         |
+| **EfficientNet-B0** | 1000-class Linear(1280→1000) | Binary Linear(1280→2) | Label smoothing, Mixup (in training) |
+
+
 # Baseline vs Non-Baseline Models
 
 <b>Baseline Models</b>
@@ -129,7 +136,14 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 * Label Smoothing and SWA improve calibration but require longer training.
 * ResNet (Optimised) achieved the best trade-off between accuracy, F1-score, and generalisation.
 
-Running locally:
+Running local pc:
 run env
 go to main folder
 python main.py
+
+Running local docker:
+run env
+go to root folder
+docker run -it --rm -p 7860:7860 fall-detection-app
+
+Running cloud huggingface:
