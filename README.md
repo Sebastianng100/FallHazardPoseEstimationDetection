@@ -91,6 +91,24 @@ All models classify between two classes:
 | **ResNet-18**       | 1000-class Linear(512→1000)  | Binary Linear(512→2)  | Dropout(0.5)                         |
 | **EfficientNet-B0** | 1000-class Linear(1280→1000) | Binary Linear(1280→2) | Label smoothing, Mixup (in training) |
 
+# Model Fine tuning
+| **Model**                       | **Fine-Tuned Components** | **Technique / Setting**               | **Purpose / Rationale**                                                                          |
+| ------------------------------- | ------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **ResNet-18 (Optimised)**       | Backbone (Conv1–Layer4)   | **Unfrozen (trainable)**              | Allow full model to relearn posture-specific and domain-specific features for fall detection.    |
+|                                 | Loss Function             | **Focal Loss**                        | Focuses learning on hard and minority samples (e.g., fall cases) to reduce class imbalance bias. |
+|                                 | Learning Rate             | **1 × 10⁻⁵**                          | Small LR ensures slow, stable updates to pretrained weights during fine-tuning.                  |
+|                                 | Epochs                    | **20**                                | Provides enough iterations for full-network convergence.                                         |
+|                                 | Scheduler                 | **OneCycleLR**                        | Dynamically adjusts LR (increase then decrease) for faster, smoother convergence.                |
+|                                 | Regularisation            | **Dropout (0.5)**                     | Prevents overfitting when all layers are trainable.                                              |
+|                                 | Optimiser                 | **AdamW**                             | Stable weight-decay version of Adam; balances speed and generalisation.                          |
+| **EfficientNet-B0 (Optimised)** | Backbone (All layers)     | **Unfrozen (trainable)**              | Fine-tune EfficientNet features to adapt to fall-specific visual cues.                           |
+|                                 | Loss Function             | **Label Smoothing (0.1)**             | Prevents over-confidence and improves calibration on small datasets.                             |
+|                                 | Data Augmentation         | **Mixup (α = 0.4)**                   | Blends images and labels to increase dataset diversity and robustness.                           |
+|                                 | Optimisation              | **SWA (Stochastic Weight Averaging)** | Averages weights over epochs → smoother, more stable final model.                                |
+|                                 | Scheduler                 | **CosineAnnealingLR**                 | Gradually decays LR following a cosine curve for stable long-term convergence.                   |
+|                                 | Learning Rate / Epochs    | **1 × 10⁻⁵ / 20 epochs**              | Matches fine-tuning pace; stable for deep model adaptation.                                      |
+
+
 
 # Baseline vs Non-Baseline Models
 
