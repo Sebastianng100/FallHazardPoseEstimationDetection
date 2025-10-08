@@ -123,7 +123,7 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 
 | **Configuration Component**        | **Rationale / Purpose**                                                                                                                                 |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **  Baseline Configuration**      | **Goal:** Establish a simple, stable benchmark using pretrained ImageNet features.                                                                      |
+|    **Baseline Configuration**      | **Goal:** Establish a simple, stable benchmark using pretrained ImageNet features.                                                                      |
 | Model Backbone                     | Frozen. Reuses ImageNet filters (edges, shapes, textures) without further training. Prevents overfitting and provides a reliable reference performance. |
 | Classifier Layer                   | Replaced final FC layer (1000→2) to match binary classes: *Fall* and *Not Fall.*                                                                        |
 | Loss Function – `CrossEntropyLoss` | Standard classification loss measuring the difference between predicted and true classes. Easy to interpret and suitable for balanced datasets.         |
