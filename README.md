@@ -119,6 +119,32 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 | Augmentation      | None            | Mixup, Dropout, Label Smoothing      |
 | Evaluation Metric | F1-Score        | F1-Score                             |
 
+# Training Rationale
+
+| **Configuration Component**        | **Rationale / Purpose**                                                                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **📘 Baseline Configuration**      | **Goal:** Establish a simple, stable benchmark using pretrained ImageNet features.                                                                      |
+| Model Backbone                     | Frozen. Reuses ImageNet filters (edges, shapes, textures) without further training. Prevents overfitting and provides a reliable reference performance. |
+| Classifier Layer                   | Replaced final FC layer (1000→2) to match binary classes: *Fall* and *Not Fall.*                                                                        |
+| Loss Function – `CrossEntropyLoss` | Standard classification loss measuring the difference between predicted and true classes. Easy to interpret and suitable for balanced datasets.         |
+| Optimizer – `Adam`                 | Adaptive optimizer for quick convergence with minimal tuning. Performs well for small datasets and limited trainable parameters.                        |
+| Learning Rate – `1e-4`             | Moderate LR ensures stable updates for the newly added classifier layer.                                                                                |
+| Epochs – `10`                      | Sufficient for convergence when training only the final layer.                                                                                          |
+| Data Augmentation                  | Basic resizing and ImageNet normalization to align with pretrained model expectations.                                                                  |
+| **Outcome:**                       | Provides baseline metrics (accuracy, F1) for comparing improvement after full fine-tuning.                                                              |
+
+| **Configuration Component**           | **Rationale / Purpose**                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **🔶 Optimised ResNet Configuration** | **Goal:** Fine-tune all layers to learn posture-specific and domain-specific features for fall detection.                       |
+| Backbone                              | Unfrozen. Allows convolutional filters to relearn human postures, orientations, and environmental cues specific to fall images. |
+| Loss Function – `Focal Loss`          | Focuses learning on hard or minority samples (*Fall*), reducing class imbalance bias.                                           |
+| Scheduler – `OneCycleLR`              | Dynamically adjusts learning rate (increase then decrease) for faster, smoother convergence. Prevents early stagnation.         |
+| Regularisation – `Dropout(0.5)`       | Randomly disables 50% of neurons to reduce overfitting while fine-tuning all layers.                                            |
+| Learning Rate – `1e-5`                | Smaller LR ensures slow, controlled fine-tuning of pretrained weights to prevent catastrophic forgetting.                       |
+| Epochs – `20`                         | Provides sufficient updates for full-network fine-tuning and stability.                                                         |
+| **Outcome:**                          | Achieved significant improvement in F1 (~0.87). Learns fall-specific posture and ground contact patterns.                       |
+
+
 # Evaluation Results
 
 | Model                    | Best Epoch | Best Validation F1 | Validation Accuracy | Observations                                                      |
