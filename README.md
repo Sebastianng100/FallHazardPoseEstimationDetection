@@ -1,17 +1,17 @@
-*To run codes locally
+# To run codes locally
 PYTHON NEEDS TO BE IN 3.11.x else the mediapipe won't work
-1. pip install -r requirements.txt
-2. pip install -U gradio gradio_client
-3. python src/app/gradio_app.py
-4. Check browser at url:    http://127.0.0.1:7860 or http://0.0.0.0:7860
-.venv\Scripts\activate
+1. activate env .venv\Scripts\activate
+2. pip install -r requirements.txt
+3. pip install -U gradio gradio_client
+4. python src/app/gradio_app.py
+5. Check browser at url:    http://127.0.0.1:7860 or http://0.0.0.0:7860
 
-To run codes on docker
 
-# Build image
+# To run codes on docker
+<b>Build image</b>
 go into parent folder first
 docker build -t fall-detection-app .
-# Run container
+<b>Run container</b>
 docker run -it --rm -p 7860:7860 fall-detection-app
 
 <b>Docker depolyment</b>
@@ -51,22 +51,7 @@ Run Classification
 1. python classification.py --epochs 10
 2. python classification.py --epochs 10 --unfreeze-backbone
 
-
-Questions for the prof
-(Dataset)
-1. Do i need to annotate some images via maybe labelmg to show i know how to do it
-2. Do i need to use a good model that has high accuracy to spam label images and check through it to have a bigger dataset
-(Model Archetecture)
-1. Using resnet and yolo which is standard currently, try maybe efficientnet
-
-Questions for myself
-1. Have you done other model other than yolo :'(
-2. modify layers
-3. do cloud deploy
-4. do annotation if have time
-
-
-Struggles i faces
+# Struggles i faced
 I forgot that my 0 is fall and 1 is not fall and i accidentally trained it opposite and was so frustrated as to why my results are so bad but actually it is just my fault for being clumsy
 
 solo is too hard i need to do everything alone no help from anyone
@@ -190,6 +175,7 @@ The optimised models unfreeze the backbone for fine-tuning and apply advanced tr
 * Label Smoothing and SWA improve calibration but require longer training.
 * ResNet (Optimised) achieved the best trade-off between accuracy, F1-score, and generalisation.
 
+# Running
 Running local pc:
 run env
 go to main folder
@@ -201,3 +187,6 @@ go to root folder
 docker run -it --rm -p 7860:7860 fall-detection-app
 
 Running cloud huggingface:
+git add .
+git commit -m "Initial Docker deployment"
+git push
