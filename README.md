@@ -322,8 +322,8 @@ Settings Used:
 - more hsv
 - more translate
 - more scaling
-- Optimizer: AdamW
-- Batch size: 8
+4. Optimizer: AdamW
+5. Batch size: 8
 Outcome:
 1. Better generalization
 2. Lower validation error
@@ -333,6 +333,7 @@ Outcome:
 ### yolov8m_refined
 Why this model was created:
 This is meant to be the final, polished, carefully tuned YOLOv8m configuration. However in the end YOLOV8m2 did the best.
+This is the point where i was wondering if my autoannotate was bad in the first place and i find a new dataset with bounding boxes
 Goal: maximum accuracy without extremely long training.
 Settings Used:
 1. Model: YOLOv8m
