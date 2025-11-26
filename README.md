@@ -190,3 +190,53 @@ Running cloud huggingface:
 git add .
 git commit -m "Initial Docker deployment"
 git push
+
+# Project Part 2
+## Why did i choose bounding boxes
+Fall detection is fundamentally a spatial problem
+Falls happen when a person’s body orientation and position change rapidly or assume an abnormal posture (e.g., lying on the ground).
+Bounding boxes help to do the following:
+1. locate the person
+2. track the center of mass
+3. detect posture shape
+4. differentiate standing vs falling
+Segmentation or Keypoint models such as pose is too slow and require GPU. YOLO bounding boxes gives me the compromise of:
+1. speed
+2. accuracy
+3. simplicity
+YOLO works very well with limited training data
+LE2i dataset is small, noisy, and contains many camera angles.
+YOLOv8 and etc. is designed for this kind of situation — fast learning, robust generalization.
+## What i have attempted in this project half
+Did my own annotation using roboflow as the cleanest dataset does not contain bounding boxes
+The following was performed:
+1. Reading annotation files
+2. Generating YOLO label files automatically
+3. Organizing train/val/test split
+4. Creating data.yaml with class mapping
+As now i am doing bounding box not classification, i cannot just use images with no bounding boxes
+Originally Le2i has multiple classes such as falling lying like fall none sitting etc. but i decide to simplify it into 2 class standing and falling in the end to help:
+1. Improves model accuracy
+2. Reduces confusion between irrelevant states
+3. Simplifies output for real-world usage
+## Why I Used Light Augmentation and Disabled Mosaic / Mixup
+The LE2i dataset is:
+1. small
+2. indoor only
+3. low resolution
+4. contains real human falls
+5. Aggressive augmentations (mosaic, mixup) destroy human posture structure, making the fall pattern unrealistic.
+So I disabled them.
+## I HAD many models that i trained previously
+### Baseline model (Yolov8m - Default Settings)
+I wanted to establish a starting point to see how well the model can perform with just the dataset and nothing futher this is so that when i do my changes i can see the grown in my model
+Settings:
+1. Model: yolov8m.pt (Balanced model for testing)
+2. Epochs: 10–20 (Avoid long training)
+3. Batch size: 8 (Stable)
+4. No augmentation tuning (Determine natural behaviour)
+5. Default optimizer (SGD - Standard baseline)
+6. Mosaic on (default YOLO behavior)
+7. Mixup on
+
+### Improved Model 1 (YOLOv8n - Fast)
