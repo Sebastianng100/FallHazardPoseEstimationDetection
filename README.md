@@ -231,7 +231,7 @@ So I disabled them.
 ### Baseline model (Yolov8m - Default Settings)
 I wanted to establish a starting point to see how well the model can perform with just the dataset and nothing futher this is so that when i do my changes i can see the grown in my model
 Settings:
-1. Model: yolov8m.pt (Balanced model for testing)
+1. Model: yolov8m (Balanced model for testing)
 2. Epochs: 10–20 (Avoid long training)
 3. Batch size: 8 (Stable)
 4. No augmentation tuning (Determine natural behaviour)
@@ -240,3 +240,12 @@ Settings:
 7. Mixup on
 
 ### Improved Model 1 (YOLOv8n - Fast)
+This is my first point of improvement i wanted to look for a faster model and slightly more training
+Settings:
+1. Model: yolov8n (Fast and good for rapid iterations)
+2. Epochs: 30 (More for learning patterns)
+3. Batch size: 16 (Faster training, more stable gradiant estimate - Not too much to the point where generalization is bad and overfitting.)
+4. Optimizer: AdamW (Smoother gradients and better for small dataset learning)
+5. Mosaic = 0 (Fall posture distorted, disable)
+6. Mixup = 0 (Human pose mixing unrealistic)
+
