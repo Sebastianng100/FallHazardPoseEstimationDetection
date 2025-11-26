@@ -228,6 +228,17 @@ The LE2i dataset is:
 5. Aggressive augmentations (mosaic, mixup) destroy human posture structure, making the fall pattern unrealistic.
 So I disabled them.
 ## I HAD many models that i trained previously
+### autoannotation-model(yolov8n) (Automatic Label Generation Test)
+Why this model was created:
+To test auto-annotation and see if YOLO could help label unlabelled images.
+Settings Used:
+1. Model: YOLOv8n
+2. Epochs: 30 (just for inference)
+No training purpose — used for auto-labeling
+Outcome:
+Auto-labeling produced inaccurate boxes
+Needed manual correction
+Useful for expanding dataset but not reliable alone
 ### Baseline model (Yolov8m - Default Settings)
 I wanted to establish a starting point to see how well the model can perform with just the dataset and nothing futher this is so that when i do my changes i can see the grown in my model
 Settings:
@@ -249,3 +260,132 @@ Settings:
 5. Mosaic = 0 (Fall posture distorted, disable)
 6. Mixup = 0 (Human pose mixing unrealistic)
 
+1. Baseline Model (YOLOv8m — Default Settings)
+Why this model was created:
+To establish a true baseline using default YOLO settings, no tuning.
+This helps compare how each improvement affects accuracy.
+Settings Used:
+1. Model: YOLOv8m (balanced power + speed)
+2. Epochs: 10–20 (quick baseline)
+3. Batch size: 8 (safe for CPU)
+4. Augmentations: default
+5. Optimizer: SGD
+6. Mosaic: ON
+7. Mixup: ON
+Outcome:
+Moderate accuracy
+Lots of false positives & false negatives
+Useful only as a learning reference
+
+### train7-yolov8n-baseline (Fast Baseline Model)
+Why this model was created
+To test if the tiny model (YOLOv8n) can still learn fall vs stand,
+and to reduce training time dramatically.
+Settings Used:
+1. Model: YOLOv8n (fast, light)
+2. Epochs: 30
+3. Batch size: 16 (faster training)
+4. Optimizer: AdamW
+5. Mosaic: 0 (postures distort)
+6. Mixup: 0
+7. Light augmentations only
+ - hsv
+ - slight translate
+ - horizontal flip
+Outcome:
+Faster than baseline
+Better early learning stability
+Still weaker detection (model too small)
+
+### train8-yolov10n-baseline (Testing Next-Gen Architecture)
+Why this model was created:
+To check if YOLOv10n new architecture performs better than YOLOv8n.
+Settings Used:
+1. Model: YOLOv10n
+2. Epochs: 60
+3. Batch size: 16
+4. Optimizer: AdamW
+Augmentations: light only
+No mosaic, no mixup
+Outcome:
+Slight improvement over v8n
+Faster but not significantly better
+Still not strong enough for fall posture detection
+
+### autoannotation-model (Automatic Label Generation Test)
+Why this model was created:
+To test auto-annotation and see if YOLO could help label unlabelled images.
+Settings Used:
+1. Model: YOLOv8n
+2. Epochs: 30 (just for inference)
+No training purpose — used for auto-labeling
+Outcome:
+Auto-labeling produced inaccurate boxes
+Needed manual correction
+Useful for expanding dataset but not reliable alone
+
+### yolo_v8m
+Why this model was created:
+To properly optimize YOLOv8m with carefully selected augmentations
+and the AdamW optimizer for better learning.
+Settings Used:
+1. Model: YOLOv8m
+2. Epochs: 150
+3. Optimizer: AdamW
+4. reduces overfitting
+5. smooth learning
+6. Batch size: 8
+7. Augmentations:
+- hsv adjustments
+- translate
+- scale
+- flip
+8. Mosaic: 0, Mixup: 0
+(posture consistency required)
+Outcome:
+1. Big jump in accuracy
+2. More stable bounding boxes
+
+### yolo_v8m_v2 (Deep Augmentation)
+Why this model was created
+To test more aggressive augmentation and longer training.
+Settings Used:
+1. Model: YOLOv8m
+2. Epochs: 150
+3. Heavy Augmentations (controlled):
+- more hsv
+- more translate
+- more scaling
+- Optimizer: AdamW
+- Batch size: 8
+Outcome:
+1. Better generalization
+2. Lower validation error
+3. But training time increased significantly
+4. Slightly unstable because augmentations too strong
+
+### yolov8m_refined
+Why this model was created:
+This is meant to be the final, polished, carefully tuned YOLOv8m configuration. However in the end YOLOV8m2 did the best.
+Goal: maximum accuracy without extremely long training.
+Settings Used:
+1. Model: YOLOv8m
+2. Epochs: 30
+3. You stopped early due to time
+4. YOLO Early stopping saved best weights
+5. Batch size: 8
+6. Optimizer: AdamW
+7. Dropout: 0.1
+8. Helps reduce overfitting
+9. augmentations (balanced):
+- hsv
+- small translation
+- small scaling
+- flip left/right
+10. mosaic = 0, mixup = 0
+Outcome:
+1. Highest accuracy out of all experiments
+2. Good precision & recall
+3. Stable and consistent bounding boxes
+4. Minimal overfitting
+5. Best real-world performance in your Streamlit app
