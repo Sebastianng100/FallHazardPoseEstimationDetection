@@ -228,7 +228,7 @@ The LE2i dataset is:
 5. Aggressive augmentations (mosaic, mixup) destroy human posture structure, making the fall pattern unrealistic.
 So I disabled them.
 ## I HAD many models that i trained previously
-### autoannotation-model(yolov8n) (Automatic Label Generation Test)
+### Autoannotation-model(yolov8n) (Automatic Label Generation Test)
 Why this model was created:
 To test auto-annotation and see if YOLO could help label unlabelled images.
 Settings Used:
@@ -236,48 +236,26 @@ Settings Used:
 2. Epochs: 30 (just for inference)
 No training purpose — used for auto-labeling
 Outcome:
-Auto-labeling produced inaccurate boxes
-Needed manual correction
-Useful for expanding dataset but not reliable alone
-### Baseline model (Yolov8m - Default Settings)
-I wanted to establish a starting point to see how well the model can perform with just the dataset and nothing futher this is so that when i do my changes i can see the grown in my model
-Settings:
-1. Model: yolov8m (Balanced model for testing)
-2. Epochs: 10–20 (Avoid long training)
-3. Batch size: 8 (Stable)
-4. No augmentation tuning (Determine natural behaviour)
-5. Default optimizer (SGD - Standard baseline)
-6. Mosaic on (default YOLO behavior)
-7. Mixup on
+1. Gotten labels (bounding boxes for each of the data)
 
-### Improved Model 1 (YOLOv8n - Fast)
-This is my first point of improvement i wanted to look for a faster model and slightly more training
-Settings:
-1. Model: yolov8n (Fast and good for rapid iterations)
-2. Epochs: 30 (More for learning patterns)
-3. Batch size: 16 (Faster training, more stable gradiant estimate - Not too much to the point where generalization is bad and overfitting.)
-4. Optimizer: AdamW (Smoother gradients and better for small dataset learning)
-5. Mosaic = 0 (Fall posture distorted, disable)
-6. Mixup = 0 (Human pose mixing unrealistic)
-
-1. Baseline Model (YOLOv8m — Default Settings)
+### yolov8m (Baseline model)
 Why this model was created:
 To establish a true baseline using default YOLO settings, no tuning.
 This helps compare how each improvement affects accuracy.
 Settings Used:
 1. Model: YOLOv8m (balanced power + speed)
-2. Epochs: 10–20 (quick baseline)
+2. Epochs: 20 (quick baseline)
 3. Batch size: 8 (safe for CPU)
 4. Augmentations: default
 5. Optimizer: SGD
 6. Mosaic: ON
 7. Mixup: ON
 Outcome:
-Moderate accuracy
-Lots of false positives & false negatives
-Useful only as a learning reference
+1. Moderate accuracy
+2. Lots of false positives & false negatives
+3. Useful only as a learning reference
 
-### train7-yolov8n-baseline (Fast Baseline Model)
+### yolov8n-baseline (Fast Baseline Model)
 Why this model was created
 To test if the tiny model (YOLOv8n) can still learn fall vs stand,
 and to reduce training time dramatically.
@@ -293,11 +271,11 @@ Settings Used:
  - slight translate
  - horizontal flip
 Outcome:
-Faster than baseline
-Better early learning stability
-Still weaker detection (model too small)
+1. Faster than baseline
+2. Better early learning stability
+3. Still weaker detection (model too small)
 
-### train8-yolov10n-baseline (Testing Next-Gen Architecture)
+### yolov10n-baseline (Testing Next-Gen Architecture)
 Why this model was created:
 To check if YOLOv10n new architecture performs better than YOLOv8n.
 Settings Used:
@@ -305,26 +283,14 @@ Settings Used:
 2. Epochs: 60
 3. Batch size: 16
 4. Optimizer: AdamW
-Augmentations: light only
-No mosaic, no mixup
+5. Augmentations: light only
+6. No mosaic, no mixup
 Outcome:
-Slight improvement over v8n
-Faster but not significantly better
-Still not strong enough for fall posture detection
+1. Slight improvement over v8n
+2. Faster but not significantly better
+3. Still not strong enough for fall posture detection
 
-### autoannotation-model (Automatic Label Generation Test)
-Why this model was created:
-To test auto-annotation and see if YOLO could help label unlabelled images.
-Settings Used:
-1. Model: YOLOv8n
-2. Epochs: 30 (just for inference)
-No training purpose — used for auto-labeling
-Outcome:
-Auto-labeling produced inaccurate boxes
-Needed manual correction
-Useful for expanding dataset but not reliable alone
-
-### yolo_v8m
+### advanced_yolo_v8m
 Why this model was created:
 To properly optimize YOLOv8m with carefully selected augmentations
 and the AdamW optimizer for better learning.
