@@ -1,3 +1,21 @@
+# =========================================
+# 1) Ignore EVERYTHING by default
+# =========================================
+*
+
+# Allow Git to see folders (important!)
+!*/
+
+# =========================================
+# 2) Keep ONLY fall_detection_app folder
+# =========================================
+!fall_detection_app/
+!fall_detection_app/**
+
+# =========================================
+# 3) Your original rules (optional because "*" already covers them)
+# =========================================
+
 # Ignore Python virtual environments
 env/
 venv/
@@ -15,8 +33,8 @@ __pycache__/
 Thumbs.db
 
 # Ignore dataset files
-data
-annotation
+data/
+annotation/
 datasets/
 kaggle_fall_dataset/
 processed_dataset/
@@ -30,9 +48,8 @@ main/.gradio
 main/__pycache__
 
 # Saved Model
-saved_model
+saved_model/
 
 # Files and Folders to ignore
-scripts
+scripts/
 *.ipynb
-

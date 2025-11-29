@@ -1,9 +1,11 @@
 gradio
 torch==2.3.1
 torchvision==0.18.1
-ultralytics==8.3.26
+ultralytics==8.3.230
 opencv-python==4.10.0.84
 numpy==1.26.4
 scikit-learn
 huggingface_hub
 label-studio
+streamlit
+pillow
